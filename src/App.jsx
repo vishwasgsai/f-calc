@@ -6,18 +6,18 @@ const fmtRs = (n) => "₹" + n.toLocaleString("en-IN", { maximumFractionDigits: 
 
 export default function App() {
   // ── Inputs ──────────────────────────────────────────────────────────────
-  const [makeupCond, setMakeupCond]     = useState(200);
-  const [blowdownCond, setBlowdownCond] = useState(800);
-  const [circulation, setCirculation]   = useState(500);
-  const [evapPct, setEvapPct]           = useState(1.0);
-  const [driftPct, setDriftPct]         = useState(0.05);
-  const [targetCoc, setTargetCoc]       = useState(4);
+  const [makeupCond, setMakeupCond]     = useState(500);
+  const [blowdownCond, setBlowdownCond] = useState(3000);
+  const [circulation, setCirculation]   = useState(1000);
+  const [evapPct, setEvapPct]           = useState(2.0);
+  const [driftPct, setDriftPct]         = useState(0.02);
+  const [targetCoc, setTargetCoc]       = useState(8);
 
   // Cost inputs (₹)
   const [waterCostPerM3, setWaterCostPerM3]       = useState(45);
   const [chemCostPerM3, setChemCostPerM3]         = useState(12);
   const [sewageCostPerM3, setSewageCostPerM3]     = useState(20);
-  const [operatingHours, setOperatingHours]       = useState(8760);
+  const [operatingHours, setOperatingHours]       = useState(10000);
 
   // ── Calculations ──────────────────────────────────────────────────────
   const calc = useMemo(() => {
@@ -62,7 +62,7 @@ export default function App() {
 
     // Sensitivity curve
     const curve = [];
-    for (let c = 1.5; c <= 10.05; c += 0.5) {
+    for (let c = 1.5; c <= 20.05; c += 0.5) {
       const bd = Math.max((evap / c) - drift, 0);
       const mu = evap + bd + drift;
       const amu = mu * operatingHours;
@@ -158,17 +158,17 @@ export default function App() {
           <div style={{ fontSize: 11, color: "#00c8ff", fontFamily: "'Courier Prime', monospace", letterSpacing: "0.15em", marginBottom: 16, borderBottom: "1px solid rgba(0,200,255,0.2)", paddingBottom: 6 }}>
             WATER QUALITY
           </div>
-          <Slider label="Make-up Conductivity" value={makeupCond} min={50} max={1000} step={10} onChange={setMakeupCond} unit=" µS/cm" />
-          <Slider label="Blowdown Conductivity" value={blowdownCond} min={100} max={5000} step={50} onChange={setBlowdownCond} unit=" µS/cm" />
+          <Slider label="Make-up Conductivity" value={makeupCond} min={50} max={2000} step={10} onChange={setMakeupCond} unit=" µS/cm" />
+          <Slider label="Blowdown Conductivity" value={blowdownCond} min={100} max={10000} step={50} onChange={setBlowdownCond} unit=" µS/cm" />
 
           <div style={{ fontSize: 11, color: "#00c8ff", fontFamily: "'Courier Prime', monospace", letterSpacing: "0.15em", margin: "20px 0 16px", borderBottom: "1px solid rgba(0,200,255,0.2)", paddingBottom: 6 }}>
             SYSTEM PARAMETERS
           </div>
-          <Slider label="Circulation Flow" value={circulation} min={10} max={5000} step={10} onChange={setCirculation} unit=" m³/h" />
-          <Slider label="Evaporation Rate" value={evapPct} min={0.1} max={5} step={0.1} onChange={setEvapPct} unit="%" />
-          <Slider label="Drift Rate" value={driftPct} min={0.01} max={0.5} step={0.01} onChange={setDriftPct} unit="%" />
-          <Slider label="Target CoC" value={targetCoc} min={1.5} max={10} step={0.5} onChange={setTargetCoc} unit="×" hint="Target for savings comparison" />
-          <Slider label="Operating Hours/Year" value={operatingHours} min={1000} max={8760} step={100} onChange={setOperatingHours} unit=" h/yr" />
+          <Slider label="Circulation Flow" value={circulation} min={10} max={10000} step={10} onChange={setCirculation} unit=" m³/h" />
+          <Slider label="Evaporation Rate" value={evapPct} min={0.1} max={10} step={0.1} onChange={setEvapPct} unit="%" />
+          <Slider label="Drift Rate" value={driftPct} min={0.001} max={1.0} step={0.001} onChange={setDriftPct} unit="%" />
+          <Slider label="Target CoC" value={targetCoc} min={1.5} max={20} step={0.5} onChange={setTargetCoc} unit="×" hint="Target for savings comparison" />
+          <Slider label="Operating Hours/Year" value={operatingHours} min={1000} max={10000} step={100} onChange={setOperatingHours} unit=" h/yr" />
 
           <div style={{ fontSize: 11, color: "#ffb300", fontFamily: "'Courier Prime', monospace", letterSpacing: "0.15em", margin: "20px 0 16px", borderBottom: "1px solid rgba(255,179,0,0.2)", paddingBottom: 6 }}>
             COST INPUTS (₹)
@@ -287,7 +287,7 @@ export default function App() {
                   </tr>
                 </thead>
                 <tbody>
-                  {calc.curve.filter(r => [1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 8, 10].includes(r.coc)).map((row) => {
+                  {calc.curve.filter(r => [1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6, 8, 10, 12, 15, 20].includes(r.coc)).map((row) => {
                     const annualMu  = row.makeup * operatingHours;
                     const annualBd  = row.blowdown * operatingHours;
                     const cost      = annualMu * (waterCostPerM3 + chemCostPerM3) + annualBd * sewageCostPerM3;
