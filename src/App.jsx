@@ -1,8 +1,44 @@
 import { useState, useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import "./App.css";
 
 const fmt = (n, d = 2) => n.toLocaleString("en-IN", { maximumFractionDigits: d, minimumFractionDigits: d });
 const fmtRs = (n) => "₹" + n.toLocaleString("en-IN", { maximumFractionDigits: 0 });
+
+const Slider = ({ label, value, min, max, step, onChange, unit, hint }) => (
+  <div style={{ marginBottom: 16 }}>
+    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+      <span style={{ fontSize: 12, color: "#8ab4cc", fontFamily: "'Courier Prime', monospace" }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 700, color: "#e0f4ff", fontFamily: "'Courier Prime', monospace" }}>
+        {unit === "₹" ? `₹${value.toLocaleString("en-IN")}` : `${value}${unit}`}
+      </span>
+    </div>
+    <input type="range" min={min} max={max} step={step} value={value}
+      onChange={e => onChange(parseFloat(e.target.value))}
+      style={{ width: "100%", accentColor: "#00c8ff", cursor: "pointer" }} />
+    {hint && <div style={{ fontSize: 10, color: "#4a7a94", marginTop: 2 }}>{hint}</div>}
+  </div>
+);
+
+const MetricCard = ({ label, value, sub, accent }) => (
+  <div
+    className="hover-float"
+    style={{
+      background: "rgba(0,200,255,0.05)",
+      border: `1px solid ${accent || "rgba(0,200,255,0.2)"}`,
+      borderRadius: 12,
+      padding: "14px 18px",
+      flex: 1,
+      minWidth: 130,
+      "--hover-border-color": accent || "rgba(0, 200, 255, 0.5)",
+      "--hover-shadow-color": accent ? `${accent}25` : "rgba(0, 200, 255, 0.15)",
+    }}
+  >
+    <div style={{ fontSize: 11, color: "#5a9ab8", fontFamily: "'Courier Prime', monospace", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
+    <div style={{ fontSize: 22, fontWeight: 700, color: accent || "#00c8ff", fontFamily: "'Courier Prime', monospace" }}>{value}</div>
+    {sub && <div style={{ fontSize: 11, color: "#4a7090", marginTop: 2 }}>{sub}</div>}
+  </div>
+);
 
 export default function App() {
   // ── Inputs ──────────────────────────────────────────────────────────────
@@ -95,31 +131,7 @@ export default function App() {
   const statusColors = { low: "#ffb300", good: "#00c8ff", high: "#ff6b6b" };
   const statusText   = { low: "Too Low — Wasteful", good: "Optimal Range", high: "High — Monitor Scale" };
 
-  const Slider = ({ label, value, min, max, step, onChange, unit, hint }) => (
-    <div style={{ marginBottom: 16 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-        <span style={{ fontSize: 12, color: "#8ab4cc", fontFamily: "'Courier Prime', monospace" }}>{label}</span>
-        <span style={{ fontSize: 13, fontWeight: 700, color: "#e0f4ff", fontFamily: "'Courier Prime', monospace" }}>
-          {unit === "₹" ? `₹${value.toLocaleString("en-IN")}` : `${value}${unit}`}
-        </span>
-      </div>
-      <input type="range" min={min} max={max} step={step} value={value}
-        onChange={e => onChange(parseFloat(e.target.value))}
-        style={{ width: "100%", accentColor: "#00c8ff", cursor: "pointer" }} />
-      {hint && <div style={{ fontSize: 10, color: "#4a7a94", marginTop: 2 }}>{hint}</div>}
-    </div>
-  );
 
-  const MetricCard = ({ label, value, sub, accent }) => (
-    <div style={{
-      background: "rgba(0,200,255,0.05)", border: `1px solid ${accent || "rgba(0,200,255,0.2)"}`,
-      borderRadius: 12, padding: "14px 18px", flex: 1, minWidth: 130
-    }}>
-      <div style={{ fontSize: 11, color: "#5a9ab8", fontFamily: "'Courier Prime', monospace", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: accent || "#00c8ff", fontFamily: "'Courier Prime', monospace" }}>{value}</div>
-      {sub && <div style={{ fontSize: 11, color: "#4a7090", marginTop: 2 }}>{sub}</div>}
-    </div>
-  );
 
   const tooltipStyle = { backgroundColor: "#0a1a2a", border: "1px solid #1e4060", borderRadius: 8, fontSize: 12, color: "#e0f4ff" };
 
@@ -182,12 +194,22 @@ export default function App() {
         <div style={{ flex: 1, padding: "24px 24px" }}>
 
           {/* CoC Hero */}
-          <div style={{
-            background: `linear-gradient(135deg, rgba(0,200,255,0.08), rgba(0,0,0,0))`,
-            border: `2px solid ${statusColors[cocStatus]}40`,
-            borderRadius: 18, padding: "24px 28px", marginBottom: 24,
-            display: "flex", alignItems: "center", gap: 32, flexWrap: "wrap"
-          }}>
+          <div
+            className="hover-float"
+            style={{
+              background: `linear-gradient(135deg, rgba(0,200,255,0.08), rgba(0,0,0,0))`,
+              border: `2px solid ${statusColors[cocStatus]}40`,
+              borderRadius: 18,
+              padding: "24px 28px",
+              marginBottom: 24,
+              display: "flex",
+              alignItems: "center",
+              gap: 32,
+              flexWrap: "wrap",
+              "--hover-border-color": statusColors[cocStatus],
+              "--hover-shadow-color": `${statusColors[cocStatus]}25`,
+            }}
+          >
             <div>
               <div style={{ fontSize: 11, color: "#5a9ab8", fontFamily: "'Courier Prime', monospace", letterSpacing: "0.15em", marginBottom: 4 }}>CYCLES OF CONCENTRATION</div>
               <div style={{ fontSize: 64, fontWeight: 700, color: statusColors[cocStatus], fontFamily: "'Courier Prime', monospace", lineHeight: 1, textShadow: `0 0 30px ${statusColors[cocStatus]}60` }}>
@@ -211,12 +233,20 @@ export default function App() {
               { label: "Annual Sewage Cost", val: calc.annualSewageCost, color: "#ff6b6b" },
               { label: "TOTAL ANNUAL COST", val: calc.totalAnnualCost, color: "#e0f4ff", big: true },
             ].map(({ label, val, color, big }) => (
-              <div key={label} style={{
-                flex: 1, minWidth: 150,
-                background: big ? "rgba(0,200,255,0.1)" : "rgba(255,255,255,0.03)",
-                border: `1px solid ${color}30`,
-                borderRadius: 12, padding: "14px 18px",
-              }}>
+              <div
+                key={label}
+                className="hover-float"
+                style={{
+                  flex: 1,
+                  minWidth: 150,
+                  background: big ? "rgba(0,200,255,0.1)" : "rgba(255,255,255,0.03)",
+                  border: `1px solid ${color}30`,
+                  borderRadius: 12,
+                  padding: "14px 18px",
+                  "--hover-border-color": color,
+                  "--hover-shadow-color": `${color}25`,
+                }}
+              >
                 <div style={{ fontSize: 10, color: "#5a9ab8", fontFamily: "'Courier Prime', monospace", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 4 }}>{label}</div>
                 <div style={{ fontSize: big ? 22 : 18, fontWeight: 700, color, fontFamily: "'Courier Prime', monospace" }}>{fmtRs(val)}</div>
                 <div style={{ fontSize: 11, color: "#3a6070", marginTop: 2 }}>per year</div>
@@ -225,12 +255,22 @@ export default function App() {
           </div>
 
           {/* Savings Banner */}
-          <div style={{
-            background: "linear-gradient(90deg, rgba(0,255,100,0.07), rgba(0,0,0,0))",
-            border: "1px solid rgba(0,255,100,0.25)",
-            borderRadius: 12, padding: "14px 20px", marginBottom: 24,
-            display: "flex", gap: 40, flexWrap: "wrap", alignItems: "center"
-          }}>
+          <div
+            className="hover-float"
+            style={{
+              background: "linear-gradient(90deg, rgba(0,255,100,0.07), rgba(0,0,0,0))",
+              border: "1px solid rgba(0,255,100,0.25)",
+              borderRadius: 12,
+              padding: "14px 20px",
+              marginBottom: 24,
+              display: "flex",
+              gap: 40,
+              flexWrap: "wrap",
+              alignItems: "center",
+              "--hover-border-color": "#00ff99",
+              "--hover-shadow-color": "rgba(0, 255, 153, 0.15)",
+            }}
+          >
             <div>
               <div style={{ fontSize: 10, color: "#5a9ab8", fontFamily: "'Courier Prime', monospace", letterSpacing: "0.12em" }}>SAVINGS vs CoC = 1× (No Concentration)</div>
               <div style={{ fontSize: 28, fontWeight: 700, color: "#00ff99", fontFamily: "'Courier Prime', monospace" }}>{fmtRs(calc.annualSaving)} / yr</div>
@@ -246,7 +286,17 @@ export default function App() {
           {/* Charts Row */}
           <div style={{ display: "grid", gridTemplateColumns: "1.6fr 1fr", gap: 20, marginBottom: 24 }}>
             {/* Line Chart */}
-            <div style={{ background: "rgba(0,15,30,0.6)", border: "1px solid rgba(0,200,255,0.1)", borderRadius: 14, padding: "16px 8px 8px 8px" }}>
+            <div
+              className="hover-float"
+              style={{
+                background: "rgba(0,15,30,0.6)",
+                border: "1px solid rgba(0,200,255,0.1)",
+                borderRadius: 14,
+                padding: "16px 8px 8px 8px",
+                "--hover-border-color": "rgba(0, 200, 255, 0.3)",
+                "--hover-shadow-color": "rgba(0, 200, 255, 0.08)",
+              }}
+            >
               <div style={{ fontSize: 12, color: "#5a9ab8", fontFamily: "'Courier Prime', monospace", letterSpacing: "0.1em", marginBottom: 10, paddingLeft: 12 }}>ANNUAL COST (₹ LAKHS) vs CoC</div>
               <ResponsiveContainer width="100%" height={240}>
                 <LineChart data={calc.curve} margin={{ top: 4, right: 20, left: 0, bottom: 4 }}>
@@ -260,7 +310,17 @@ export default function App() {
             </div>
 
             {/* Pie Chart */}
-            <div style={{ background: "rgba(0,15,30,0.6)", border: "1px solid rgba(0,200,255,0.1)", borderRadius: 14, padding: "16px 8px 8px 8px" }}>
+            <div
+              className="hover-float"
+              style={{
+                background: "rgba(0,15,30,0.6)",
+                border: "1px solid rgba(0,200,255,0.1)",
+                borderRadius: 14,
+                padding: "16px 8px 8px 8px",
+                "--hover-border-color": "rgba(0, 200, 255, 0.3)",
+                "--hover-shadow-color": "rgba(0, 200, 255, 0.08)",
+              }}
+            >
               <div style={{ fontSize: 12, color: "#5a9ab8", fontFamily: "'Courier Prime', monospace", letterSpacing: "0.1em", marginBottom: 10, paddingLeft: 12 }}>COST BREAKDOWN</div>
               <ResponsiveContainer width="100%" height={240}>
                 <PieChart>
@@ -275,7 +335,17 @@ export default function App() {
           </div>
 
           {/* Sensitivity Table */}
-          <div style={{ background: "rgba(0,15,30,0.6)", border: "1px solid rgba(0,200,255,0.1)", borderRadius: 14, padding: "16px 20px" }}>
+          <div
+            className="hover-float"
+            style={{
+              background: "rgba(0,15,30,0.6)",
+              border: "1px solid rgba(0,200,255,0.1)",
+              borderRadius: 14,
+              padding: "16px 20px",
+              "--hover-border-color": "rgba(0, 200, 255, 0.3)",
+              "--hover-shadow-color": "rgba(0, 200, 255, 0.08)",
+            }}
+          >
             <div style={{ fontSize: 12, color: "#5a9ab8", fontFamily: "'Courier Prime', monospace", letterSpacing: "0.1em", marginBottom: 14 }}>SENSITIVITY TABLE — COST vs CoC</div>
             <div style={{ overflowX: "auto" }}>
               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
@@ -313,7 +383,20 @@ export default function App() {
           </div>
 
           {/* Formula footer */}
-          <div style={{ marginTop: 20, background: "rgba(0,0,0,0.3)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "14px 20px", fontSize: 12, color: "#4a7090" }}>
+          <div
+            className="hover-float"
+            style={{
+              marginTop: 20,
+              background: "rgba(0,0,0,0.3)",
+              border: "1px solid rgba(255,255,255,0.07)",
+              borderRadius: 12,
+              padding: "14px 20px",
+              fontSize: 12,
+              color: "#4a7090",
+              "--hover-border-color": "rgba(255, 255, 255, 0.15)",
+              "--hover-shadow-color": "rgba(255, 255, 255, 0.02)",
+            }}
+          >
             <span style={{ color: "#00c8ff", fontFamily: "'Courier Prime', monospace" }}>FORMULA: </span>
             CoC = C_blowdown / C_makeup &nbsp;|&nbsp; Blowdown = Evaporation / CoC − Drift &nbsp;|&nbsp;
             Make-up = Evaporation + Blowdown + Drift &nbsp;|&nbsp;
