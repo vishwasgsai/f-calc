@@ -57,15 +57,17 @@ export default function App() {
 
   // ── Calculations ──────────────────────────────────────────────────────
   const calc = useMemo(() => {
-    const coc = blowdownCond / makeupCond;
+    // Clamping CoC to a minimum of 1.01 to prevent division by zero or negative values
+    const coc = Math.max(blowdownCond / makeupCond, 1.01);
     const evap = circulation * evapPct / 100;
     const drift = circulation * driftPct / 100;
-    const blowdown = Math.max((evap / coc) - drift, 0);
+    const blowdown = Math.max((evap / (coc - 1)) - drift, 0);
     const makeup = evap + blowdown + drift;
 
-    // Baseline at CoC=1 (no concentration)
-    const makeupBase = 2 * evap + drift;
-    const blowdownBase = makeupBase - evap - drift;
+    // Baseline at CoC=2.0 (Standard unoptimized baseline)
+    const cocBase = 2.0;
+    const blowdownBase = Math.max((evap / (cocBase - 1)) - drift, 0);
+    const makeupBase = evap + blowdownBase + drift;
 
     const waterSavingM3h = makeupBase - makeup;
     const waterSavingPct = makeupBase > 0 ? (waterSavingM3h / makeupBase) * 100 : 0;
@@ -88,8 +90,8 @@ export default function App() {
 
     const annualSaving = totalBaseCost - totalAnnualCost;
 
-    // Target CoC comparison
-    const targetBlowdown = Math.max((evap / targetCoc) - drift, 0);
+    // Target CoC comparison (Target CoC should also be adjusted by - 1)
+    const targetBlowdown = Math.max((evap / (targetCoc - 1)) - drift, 0);
     const targetMakeup   = evap + targetBlowdown + drift;
     const targetAnnualMakeup   = targetMakeup   * operatingHours;
     const targetAnnualBlowdown = targetBlowdown * operatingHours;
@@ -99,7 +101,7 @@ export default function App() {
     // Sensitivity curve
     const curve = [];
     for (let c = 1.5; c <= 20.05; c += 0.5) {
-      const bd = Math.max((evap / c) - drift, 0);
+      const bd = Math.max((evap / (c - 1)) - drift, 0);
       const mu = evap + bd + drift;
       const amu = mu * operatingHours;
       const abd = bd * operatingHours;
@@ -193,6 +195,27 @@ export default function App() {
         {/* ── Main Content ── */}
         <div style={{ flex: 1, padding: "24px 24px" }}>
 
+          {blowdownCond <= makeupCond && (
+            <div style={{
+              background: "rgba(255, 107, 107, 0.1)",
+              border: "1px solid #ff6b6b",
+              borderRadius: 12,
+              padding: "14px 20px",
+              marginBottom: 20,
+              fontSize: 13,
+              color: "#ff8a8a",
+              display: "flex",
+              alignItems: "center",
+              gap: 12,
+              lineHeight: "1.4",
+            }}>
+              <span style={{ fontSize: 18 }}>⚠️</span>
+              <span>
+                <strong>Invalid Water Quality Ratio:</strong> Blowdown conductivity must be greater than Make-up conductivity to represent evaporation concentration. Calculations are clamped at a minimum of 1.01× CoC.
+              </span>
+            </div>
+          )}
+
           {/* CoC Hero */}
           <div
             className="hover-float"
@@ -221,7 +244,7 @@ export default function App() {
               <MetricCard label="Make-up Flow" value={`${fmt(calc.makeup, 1)} m³/h`} sub={`${fmt(calc.annualMakeup, 0)} m³/yr`} />
               <MetricCard label="Blowdown Flow" value={`${fmt(calc.blowdown, 2)} m³/h`} sub={`${fmt(calc.annualBlowdown, 0)} m³/yr`} />
               <MetricCard label="Evaporation" value={`${fmt(calc.evap, 2)} m³/h`} />
-              <MetricCard label="Water Saved" value={`${fmt(calc.waterSavingPct, 1)}%`} sub="vs CoC = 1×" accent="#00ff99" />
+              <MetricCard label="Water Saved" value={`${fmt(calc.waterSavingPct, 1)}%`} sub="vs CoC = 2× (Baseline)" accent="#00ff99" />
             </div>
           </div>
 
@@ -272,7 +295,7 @@ export default function App() {
             }}
           >
             <div>
-              <div style={{ fontSize: 10, color: "#5a9ab8", fontFamily: "'Courier Prime', monospace", letterSpacing: "0.12em" }}>SAVINGS vs CoC = 1× (No Concentration)</div>
+              <div style={{ fontSize: 10, color: "#5a9ab8", fontFamily: "'Courier Prime', monospace", letterSpacing: "0.12em" }}>SAVINGS vs CoC = 2× (Standard Baseline)</div>
               <div style={{ fontSize: 28, fontWeight: 700, color: "#00ff99", fontFamily: "'Courier Prime', monospace" }}>{fmtRs(calc.annualSaving)} / yr</div>
             </div>
             <div>
@@ -398,7 +421,7 @@ export default function App() {
             }}
           >
             <span style={{ color: "#00c8ff", fontFamily: "'Courier Prime', monospace" }}>FORMULA: </span>
-            CoC = C_blowdown / C_makeup &nbsp;|&nbsp; Blowdown = Evaporation / CoC − Drift &nbsp;|&nbsp;
+            CoC = C_blowdown / C_makeup &nbsp;|&nbsp; Blowdown = Evaporation / (CoC − 1) − Drift &nbsp;|&nbsp;
             Make-up = Evaporation + Blowdown + Drift &nbsp;|&nbsp;
             Annual Cost = Make-up × (Water + Chemical) + Blowdown × Sewage
           </div>
